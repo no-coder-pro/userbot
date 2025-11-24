@@ -14,7 +14,7 @@ class SmartAutoReplyModule(BaseModule):
         self.pending_replies = {}
         self.conversation_mode = {}
 
-        if os.getenv('GEMINI_API_KEY', 'AIzaSyCCxrMsEyd31T5MykDDZkgs4EpOc495fPM'):
+        if os.getenv('GEMINI_API_KEY', ''):
             self.auto_reply_message = "𝑰 𝒎𝒂𝒚𝒃𝒆 𝒃𝒖𝒔𝒚 𝒏𝒐𝒘. 💝\n\n💬 আপনি চাইলে আমাকে কিছু জিজ্ঞাসা করতে পারেন, আমি AI দিয়ে উত্তর দেওয়ার চেষ্টা করব। \n 💝 𝑻𝒉𝒂𝒏𝒌 𝑼 💝"
         else:
             self.auto_reply_message = "𝑰 𝒎𝒂𝒚𝒃𝒆 𝒃𝒖𝒔𝒚 𝒏𝒐𝒘. 💝\n\n⚠️ Note: AI features are currently disabled (GEMINI_API_KEY not configured).\n\n 💝 𝑻𝒉𝒂𝒏𝒌 𝑼 💝"
@@ -28,7 +28,7 @@ class SmartAutoReplyModule(BaseModule):
         self.max_history_length = 50
         self.pending_group_replies = {}
 
-        self.api_key = os.getenv('GEMINI_API_KEY' , 'AIzaSyCCxrMsEyd31T5MykDDZkgs4EpOc495fPM')
+        self.api_key = os.getenv('GEMINI_API_KEY' , '')
         if not self.api_key:
             logging.error("❌ GEMINI_API_KEY environment variable not set! AI features will not work.")
             self.api_url = None
