@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="bn">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>সেশন ম্যানেজমেন্ট - Admin Panel</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        .notification {
+            animation: slideIn 0.3s ease-in-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateY(-20px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-gray-100 p-4 md:p-8 min-h-screen">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="mb-8">
+            <div class="flex justify-between items-center">
+                <div>
+                    <h1 class="text-3xl font-bold text-green-400">সেশন ম্যানেজমেন্ট প্যানেল</h1>
+                    <p class="text-gray-400">সব ইউজার সেশন ডাউনলোড এবং আপলোড করুন</p>
+                    <a href="/" class="inline-block mt-2 text-blue-400 hover:text-blue-300">← মূল পেজে ফিরে যান</a>
+                </div>
+                <button onclick="logout()" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200">
+                    লগআউট
+                </button>
+            </div>
+        </header>
+
+        <!-- Notification Area -->
+        <div id="notification" class="hidden mb-6 p-4 rounded-lg"></div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            
+            <!-- Session List Section -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl p-6">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2 text-blue-400">বর্তমান সেশন ফাইল</h2>
+                
+                <div id="session-list" class="space-y-2 mb-6 max-h-96 overflow-y-auto">
+                    <p class="text-gray-400">লোড হচ্ছে...</p>
+                </div>
+
+                <button onclick="refreshSessionList()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg transition duration-200 shadow-md">
+                    রিফ্রেশ করুন
+                </button>
+            </div>
+
+            <!-- Download/Upload Section -->
+            <div class="bg-gray-800 rounded-xl shadow-2xl p-6">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2 text-purple-400">সেশন ডাউনলোড/আপলোড</h2>
+                
+                <div class="space-y-6">
+                    <!-- Download Section -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-3">সব সেশন ডাউনলোড করুন</h3>
+                        <p class="text-sm text-gray-400 mb-3">সব সেশন ফাইল একটি ZIP ফাইল হিসেবে ডাউনলোড হবে।</p>
+                        <button onclick="downloadAllSessions()" class="w-full bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md">
+                            📥 সব সেশন ডাউনলোড করুন
+                        </button>
+                    </div>
+
+                    <div class="border-t border-gray-700"></div>
+
+                    <!-- Upload Section -->
+                    <div>
+                        <h3 class="text-lg font-semibold text-gray-300 mb-3">সেশন আপলোড করুন</h3>
+                        <p class="text-sm text-red-400 mb-3">⚠️ সতর্কতা: আপলোড করলে বর্তমান সব সেশন মুছে যাবে এবং নতুন সেশন দিয়ে প্রতিস্থাপিত হবে!</p>
+                        
+                        <div class="mb-3">
+                            <label for="session-upload" class="block text-sm font-medium text-gray-300 mb-2">
+                                ZIP ফাইল নির্বাচন করুন
+                            </label>
+                            <input type="file" id="session-upload" accept=".zip" 
+                                   class="w-full bg-gray-700 text-white p-2 rounded-lg border border-gray-600 focus:ring-purple-500 focus:border-purple-500 file:mr-4 file:py-2 file:px-4 file:rounded file:border-0 file:text-sm file:font-semibold file:bg-purple-600 file:text-white hover:file:bg-purple-700">
+                        </div>
+
+                        <button onclick="uploadSessions()" class="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md">
+                            📤 সেশন আপলোড করুন (ওভাররাইট)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <script>
+        function showNotification(message, type = 'success') {
+            const notification = document.getElementById('notification');
+            notification.className = `notification mb-6 p-4 rounded-lg ${
+                type === 'success' ? 'bg-green-600' : 
+                type === 'error' ? 'bg-red-600' : 'bg-yellow-600'
+            }`;
+            notification.textContent = message;
+            notification.classList.remove('hidden');
+            
+            setTimeout(() => {
+                notification.classList.add('hidden');
+            }, 5000);
+        }
+
+        async function refreshSessionList() {
+            try {
+                const response = await fetch('/api/admin/sessions/list');
+                const data = await response.json();
+                
+                const listElement = document.getElementById('session-list');
+                listElement.innerHTML = '';
+                
+                if (data.sessions && data.sessions.length > 0) {
+                    data.sessions.forEach(session => {
+                        const div = document.createElement('div');
+                        div.className = 'bg-gray-700 p-3 rounded-lg flex justify-between items-center';
+                        div.innerHTML = `
+                            <span class="text-gray-200 font-mono text-sm">${session.name}</span>
+                            <span class="text-gray-400 text-xs">${session.size}</span>
+                        `;
+                        listElement.appendChild(div);
+                    });
+                } else {
+                    listElement.innerHTML = '<p class="text-gray-400">কোন সেশন ফাইল নেই।</p>';
+                }
+            } catch (error) {
+                showNotification('সেশন লিস্ট লোড করতে সমস্যা হয়েছে: ' + error.message, 'error');
+            }
+        }
+
+        async function downloadAllSessions() {
+            try {
+                showNotification('সেশন ডাউনলোড হচ্ছে...', 'info');
+                
+                const response = await fetch('/api/admin/sessions/download');
+                
+                if (!response.ok) {
+                    throw new Error('ডাউনলোড করতে সমস্যা হয়েছে');
+                }
+                
+                const blob = await response.blob();
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'sessions_backup.zip';
+                document.body.appendChild(a);
+                a.click();
+                window.URL.revokeObjectURL(url);
+                document.body.removeChild(a);
+                
+                showNotification('সেশন সফলভাবে ডাউনলোড হয়েছে!', 'success');
+            } catch (error) {
+                showNotification('ডাউনলোড করতে সমস্যা হয়েছে: ' + error.message, 'error');
+            }
+        }
+
+        async function uploadSessions() {
+            const fileInput = document.getElementById('session-upload');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showNotification('দয়া করে একটি ZIP ফাইল নির্বাচন করুন', 'error');
+                return;
+            }
+
+            if (!file.name.endsWith('.zip')) {
+                showNotification('শুধুমাত্র ZIP ফাইল আপলোড করা যাবে', 'error');
+                return;
+            }
+
+            if (!confirm('সতর্কতা! এটি সব বর্তমান সেশন মুছে ফেলবে এবং নতুন সেশন দিয়ে প্রতিস্থাপন করবে। আপনি কি নিশ্চিত?')) {
+                return;
+            }
+
+            try {
+                showNotification('সেশন আপলোড হচ্ছে...', 'info');
+                
+                const formData = new FormData();
+                formData.append('sessions', file);
+
+                const response = await fetch('/api/admin/sessions/upload', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.json();
+
+                if (response.ok) {
+                    showNotification(result.message || 'সেশন সফলভাবে আপলোড হয়েছে!', 'success');
+                    fileInput.value = '';
+                    refreshSessionList();
+                } else {
+                    throw new Error(result.message || 'আপলোড করতে সমস্যা হয়েছে');
+                }
+            } catch (error) {
+                showNotification('আপলোড করতে সমস্যা হয়েছে: ' + error.message, 'error');
+            }
+        }
+
+        async function logout() {
+            try {
+                const response = await fetch('/admin/logout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' }
+                });
+                
+                if (response.ok) {
+                    window.location.reload();
+                }
+            } catch (error) {
+                showNotification('লগআউট করতে সমস্যা হয়েছে', 'error');
+            }
+        }
+
+        // Initial load
+        document.addEventListener('DOMContentLoaded', () => {
+            refreshSessionList();
+        });
+    </script>
+</body>
+</html>
