@@ -23,7 +23,7 @@ socketio = SocketIO(app, async_mode='threading')
 port = int(os.environ.get("PORT", "5000"))
 logging.info(f"✅ Using port: {port}")
 
-ADMIN_PASSWORD = "sneha"
+ADMIN_PASSWORD = ""
 
 active_processes = {}
 active_bots = {}
