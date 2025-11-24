@@ -11,7 +11,7 @@ from .base_module import BaseModule
 class GeminiAIModule(BaseModule):
     def __init__(self, client, socketio):
         super().__init__(client, socketio)
-        self.api_key = os.getenv('GEMINI_API_KEY', 'AIzaSyCCxrMsEyd31T5MykDDZkgs4EpOc495fPM')
+        self.api_key = os.getenv('GEMINI_API_KEY', '')
         if not self.api_key:
             logging.error("❌ GEMINI_API_KEY environment variable not set! AI features will not work.")
             self.api_url = None
